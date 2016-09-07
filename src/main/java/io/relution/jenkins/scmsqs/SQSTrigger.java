@@ -19,9 +19,24 @@ package io.relution.jenkins.scmsqs;
 import com.amazonaws.services.sqs.model.Message;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-
+import hudson.DescriptorExtensionList;
+import hudson.Extension;
+import hudson.Util;
+import hudson.console.AnnotatedLargeText;
+import hudson.model.AbstractProject;
+import hudson.model.Action;
+import hudson.model.Item;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import hudson.util.SequentialExecutionQueue;
+import io.relution.jenkins.scmsqs.i18n.sqstrigger.Messages;
+import io.relution.jenkins.scmsqs.interfaces.*;
+import io.relution.jenkins.scmsqs.logging.Log;
+import io.relution.jenkins.scmsqs.model.events.ConfigurationChangedEvent;
+import io.relution.jenkins.scmsqs.model.events.EventBroker;
 import net.sf.json.JSONObject;
-
 import org.apache.commons.jelly.XMLOutput;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -37,30 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import hudson.DescriptorExtensionList;
-import hudson.Extension;
-import hudson.Util;
-import hudson.console.AnnotatedLargeText;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.Item;
-import hudson.triggers.Trigger;
-import hudson.triggers.TriggerDescriptor;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import hudson.util.SequentialExecutionQueue;
-import io.relution.jenkins.scmsqs.i18n.sqstrigger.Messages;
-import io.relution.jenkins.scmsqs.interfaces.Event;
-import io.relution.jenkins.scmsqs.interfaces.EventTriggerMatcher;
-import io.relution.jenkins.scmsqs.interfaces.MessageParser;
-import io.relution.jenkins.scmsqs.interfaces.MessageParserFactory;
-import io.relution.jenkins.scmsqs.interfaces.SQSQueue;
-import io.relution.jenkins.scmsqs.interfaces.SQSQueueListener;
-import io.relution.jenkins.scmsqs.interfaces.SQSQueueMonitorScheduler;
-import io.relution.jenkins.scmsqs.logging.Log;
-import io.relution.jenkins.scmsqs.model.events.ConfigurationChangedEvent;
-import io.relution.jenkins.scmsqs.model.events.EventBroker;
 
 
 public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements SQSQueueListener, Runnable {
@@ -190,6 +181,9 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements SQSQue
         final List<Event> events = parser.parseMessage(message);
 
         if (matcher.matches(events, this.job)) {
+            this.execute();
+        }else{
+            Log.info("Executing handleMessage when no event is matched");
             this.execute();
         }
     }

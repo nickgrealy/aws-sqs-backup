@@ -19,22 +19,15 @@ package io.relution.jenkins.scmsqs.model;
 import com.amazonaws.services.sqs.model.Message;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import io.relution.jenkins.scmsqs.interfaces.Event;
+import io.relution.jenkins.scmsqs.interfaces.MessageParser;
+import io.relution.jenkins.scmsqs.logging.Log;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import io.relution.jenkins.scmsqs.interfaces.Event;
-import io.relution.jenkins.scmsqs.interfaces.MessageParser;
-import io.relution.jenkins.scmsqs.logging.Log;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.CodeCommit;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.CodeCommitEvent;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.MessageBody;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.Record;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.Records;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.Reference;
 
 
 public class CodeCommitMessageParser implements MessageParser {
@@ -55,7 +48,7 @@ public class CodeCommitMessageParser implements MessageParser {
             final MessageBody body = this.gson.fromJson(message.getBody(), MessageBody.class);
             Log.info("Got message with subject: %s", body.getSubject());
             final String json = body.getMessage();
-
+            Log.info("Body of the message: %s", json);
             if (StringUtils.isEmpty(json)) {
                 Log.warning("Message contains no text");
                 return Collections.emptyList();
@@ -65,8 +58,8 @@ public class CodeCommitMessageParser implements MessageParser {
                 Log.warning("Message text is no JSON");
                 return Collections.emptyList();
             }
-
-            return this.parseRecords(json);
+            return new ArrayList<Event>();
+            //return this.parseRecords(json);
         } catch (final com.google.gson.JsonSyntaxException e) {
             Log.warning("JSON syntax exception, cannot parse message: %s", e);
         }
