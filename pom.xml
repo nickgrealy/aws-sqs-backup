@@ -19,10 +19,10 @@
 	<version>1.5-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
-	<name>AWS SQS Build Trigger Plugin</name>
+	<name>AWS SQS Build Trigger Plugin 2.0</name>
 	<description>
-		This plugin triggers builds on events from CodeCommit that are published via Amazon Web
-		Services Simple Queue Service (AWS SQS).
+		This plugin triggers builds on all events received via Amazon Web
+		Services Simple Queue Service (AWS SQS) on a specified Queue.
 	</description>
 
 	<scm>
@@ -32,7 +32,7 @@
 	</scm>
 
 	<properties>
-		<jenkins.version>1.626</jenkins.version>
+		<jenkins.version>1.651.2</jenkins.version>
 		<java.level>7</java.level>
 		<jenkins-test-harness.version>2.2</jenkins-test-harness.version>
 	</properties>
