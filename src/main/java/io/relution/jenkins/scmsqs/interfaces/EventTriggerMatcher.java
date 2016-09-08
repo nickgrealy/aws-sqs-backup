@@ -16,9 +16,10 @@
 
 package io.relution.jenkins.scmsqs.interfaces;
 
-import java.util.List;
-
 import hudson.model.AbstractProject;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.ExecuteJenkinsJobEvent;
+
+import java.util.List;
 
 
 /**
@@ -34,5 +35,5 @@ public interface EventTriggerMatcher {
      * @return {@code true} if any of the specified events matches the specified job; otherwise,
      * {@code false}.
      */
-    boolean matches(List<Event> events, AbstractProject<?, ?> job);
+    boolean matches(List<ExecuteJenkinsJobEvent> events, AbstractProject<?, ?> job);
 }

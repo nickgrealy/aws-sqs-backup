@@ -16,12 +16,6 @@
 
 package io.relution.jenkins.scmsqs.model;
 
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
-
-import java.util.List;
-
 import hudson.model.AbstractProject;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
@@ -29,22 +23,28 @@ import hudson.scm.SCM;
 import io.relution.jenkins.scmsqs.interfaces.Event;
 import io.relution.jenkins.scmsqs.interfaces.EventTriggerMatcher;
 import io.relution.jenkins.scmsqs.logging.Log;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.ExecuteJenkinsJobEvent;
 import jenkins.model.Jenkins;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.URIish;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
+
+import java.util.List;
 
 
 public class EventTriggerMatcherImpl implements EventTriggerMatcher {
 
     @Override
-    public boolean matches(final List<Event> events, final AbstractProject<?, ?> job) {
+    public boolean matches(final List<ExecuteJenkinsJobEvent> events, final AbstractProject<?, ?> job) {
         if (events == null || job == null) {
             return false;
         }
 
-        Log.info("Test if any event matches job %s", job.getName());
+        Log.info("Test if any event matches job '%s'...", job.getName());
 
-        for (final Event event : events) {
-            if (this.matches(event, job.getScm())) {
-                Log.info("Job %s matches event %s%s (%s)", job.getName(), event.getHost(), event.getPath(), event.getBranch());
+        for (final ExecuteJenkinsJobEvent event : events) {
+            Log.info("Job '%s' matches event jobName '%s'?", job.getName(), event.getJobName());
+            if (job.getName().equalsIgnoreCase(event.getJobName())) {
                 return true;
             }
         }

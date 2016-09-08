@@ -17,6 +17,7 @@
 package io.relution.jenkins.scmsqs.interfaces;
 
 import com.amazonaws.services.sqs.model.Message;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.ExecuteJenkinsJobEvent;
 
 import java.util.List;
 
@@ -32,5 +33,5 @@ public interface MessageParser {
      * @param message The {@link Message} to parse.
      * @return The collection of {@link Event} items contained in the message.
      */
-    List<Event> parseMessage(Message message);
+    List<ExecuteJenkinsJobEvent> parseMessage(Message message);
 }

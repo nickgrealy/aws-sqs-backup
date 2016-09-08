@@ -25,14 +25,21 @@ import hudson.Util;
 import hudson.console.AnnotatedLargeText;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.Cause;
 import hudson.model.Item;
+import hudson.model.ParametersAction;
+import hudson.model.StringParameterValue;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.SequentialExecutionQueue;
 import io.relution.jenkins.scmsqs.i18n.sqstrigger.Messages;
-import io.relution.jenkins.scmsqs.interfaces.*;
+import io.relution.jenkins.scmsqs.interfaces.EventTriggerMatcher;
+import io.relution.jenkins.scmsqs.interfaces.MessageParserFactory;
+import io.relution.jenkins.scmsqs.interfaces.SQSQueue;
+import io.relution.jenkins.scmsqs.interfaces.SQSQueueListener;
+import io.relution.jenkins.scmsqs.interfaces.SQSQueueMonitorScheduler;
 import io.relution.jenkins.scmsqs.logging.Log;
 import io.relution.jenkins.scmsqs.model.events.ConfigurationChangedEvent;
 import io.relution.jenkins.scmsqs.model.events.EventBroker;
@@ -46,8 +53,10 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -176,22 +185,63 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements SQSQue
     }
 
     private void handleMessage(final Message message) {
-        final MessageParser parser = this.messageParserFactory.createParser(message);
-        final EventTriggerMatcher matcher = this.getEventTriggerMatcher();
-        final List<Event> events = parser.parseMessage(message);
+        Log.info("Message received...");
+        Map<String, String> jobParams = new HashMap<>();
 
-        if (matcher.matches(events, this.job)) {
-            this.execute();
-        }else{
-            Log.info("Executing handleMessage when no event is matched");
-            this.execute();
+        // add job parameters from the message (N.B. won't work post Jenkins v2+) @see https://wiki.jenkins-ci.org/display/JENKINS/Plugins+affected+by+fix+for+SECURITY-170
+        for (Map.Entry<String, String> att : message.getAttributes().entrySet()){
+            if (StringUtils.isNotBlank(att.getKey())){
+                jobParams.put("sqs_" + att.getKey(), att.getValue());
+            }
         }
+        jobParams.put("sqs_body", message.getBody());
+        jobParams.put("sqs_messageId", message.getMessageId());
+        jobParams.put("sqs_receiptHandle", message.getReceiptHandle());
+        jobParams.put("sqs_bodyMD5", message.getMD5OfBody());
+        startJob(jobParams);
+
+//        final MessageParser parser = this.messageParserFactory.createParser(message);
+//        final EventTriggerMatcher matcher = this.getEventTriggerMatcher();
+//        final List<ExecuteJenkinsJobEvent> events = parser.parseMessage(message);
+//
+//        if (matcher.matches(events, this.job)) {
+//            this.execute();
+//        }else{
+//            Log.info("Executing handleMessage when no event is matched");
+//            this.execute();
+//        }
     }
 
-    private void execute() {
-        Log.info("SQS event triggered build of %s", this.job.getFullDisplayName());
-        this.executor.execute(this);
+    private void startJob(Map<String, String> jobParameters){
+        // initialise parameters...
+        List<StringParameterValue> params = new ArrayList<>();
+        for (Map.Entry<String, String> param : jobParameters.entrySet()){
+            params.add(new StringParameterValue(param.getKey(), param.getValue()));
+        }
+
+        // setup default cause...
+        Cause cause = new Cause.RemoteCause("NOT_SET", "Job triggered by AWS SQS Message");
+
+        // attempt to build cause from descriptor...
+        TriggerDescriptor descriptor = this.getDescriptor();
+        if (descriptor instanceof DescriptorImpl){
+            DescriptorImpl impl = (DescriptorImpl) descriptor;
+            List<SQSTriggerQueue> queues = impl.getSqsQueues();
+            if (!queues.isEmpty()){
+                cause = new Cause.RemoteCause(queues.get(0).getUrl(), "Job triggered by AWS SQS Message");
+            }
+        }
+
+        StringParameterValue[] parameters = params.toArray(new StringParameterValue[params.size()]);
+        Log.info("Triggering job with %s parameters...", parameters.length);
+        job.scheduleBuild(0, cause, new ParametersAction(parameters));
+        Log.info("Triggering job [COMPLETED]");
     }
+
+//    private void execute() {
+//        Log.info("SQS event triggered build of %s", this.job.getFullDisplayName());
+//        this.executor.execute(this);
+//    }
 
     public final class SQSTriggerPollingAction implements Action {
 

@@ -22,10 +22,13 @@ import com.google.gson.GsonBuilder;
 import io.relution.jenkins.scmsqs.interfaces.Event;
 import io.relution.jenkins.scmsqs.interfaces.MessageParser;
 import io.relution.jenkins.scmsqs.logging.Log;
-import io.relution.jenkins.scmsqs.model.entities.codecommit.*;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.CodeCommit;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.CodeCommitEvent;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.ExecuteJenkinsJobEvent;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.Record;
+import io.relution.jenkins.scmsqs.model.entities.codecommit.Reference;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,38 +46,40 @@ public class CodeCommitMessageParser implements MessageParser {
     }
 
     @Override
-    public List<Event> parseMessage(final Message message) {
+    public List<ExecuteJenkinsJobEvent> parseMessage(final Message message) {
         try {
-            final MessageBody body = this.gson.fromJson(message.getBody(), MessageBody.class);
-            Log.info("Got message with subject: %s", body.getSubject());
-            final String json = body.getMessage();
-            Log.info("Body of the message: %s", json);
-            if (StringUtils.isEmpty(json)) {
-                Log.warning("Message contains no text");
-                return Collections.emptyList();
-            }
-
-            if (!json.startsWith("{") || !json.endsWith("}")) {
-                Log.warning("Message text is no JSON");
-                return Collections.emptyList();
-            }
-            return new ArrayList<Event>();
-            //return this.parseRecords(json);
+            String body = message.getBody();
+            Log.info("Found json body: '%s'", body);
+            return Collections.singletonList(this.gson.fromJson(body, ExecuteJenkinsJobEvent.class));
+//            Log.info("Got message with subject: %s", body.getSubject());
+//            final String json = body.getMessage();
+//            Log.info("Body of the message: %s", json);
+//            if (StringUtils.isEmpty(json)) {
+//                Log.warning("Message contains no text");
+//                return Collections.emptyList();
+//            }
+//
+//            if (!json.startsWith("{") || !json.endsWith("}")) {
+//                Log.warning("Message text is no JSON");
+//                return Collections.emptyList();
+//            }
+////            return new ArrayList<Event>();
+//            return this.parseRecords(json);
         } catch (final com.google.gson.JsonSyntaxException e) {
             Log.warning("JSON syntax exception, cannot parse message: %s", e);
         }
         return Collections.emptyList();
     }
 
-    private List<Event> parseRecords(final String json) {
-        final Records records = this.gson.fromJson(json, Records.class);
-        final List<Event> events = new ArrayList<>(records.size());
+    private List<ExecuteJenkinsJobEvent> parseRecords(final String json) {
+        final ExecuteJenkinsJobEvent records = this.gson.fromJson(json, ExecuteJenkinsJobEvent.class);
+        return Collections.singletonList(records);
 
-        for (final Record record : records) {
-            this.parseEvents(events, record);
-        }
-
-        return events;
+//        for (final Record record : records) {
+//            this.parseEvents(events, record);
+//        }
+//
+//        return events;
     }
 
     private void parseEvents(final List<Event> events, final Record record) {
