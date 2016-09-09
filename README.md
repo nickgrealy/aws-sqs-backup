@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/jenkinsci/scm-sqs-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/scm-sqs-plugin)
+[![Build Status](https://travis-ci.org/jenkinsci/aws-sqs-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/scm-sqs-plugin)
 
-#SCM SQS Plugin for Jenkins
+#AWS SQS Plugin for Jenkins
 A Jenkins plugin that allows to use the Amazon Simple Queue Service (SQS) as a build trigger. Currently supports messages sent by Git repositories hosted on Amazon's CodeCommit. In the future additional services may be supported.
 
 To use this plugin you will need to have the following:
@@ -34,10 +34,10 @@ This setup assumes that you already have an AWS account and that you're able to 
 ###Install the plugin on Jenkins
 
 1. Go to `Jenkins > Manage Jenkins > Manage Plugins`.
-2. Go to `Available` and search for `scm-sqs` or `aws sqs`.
+2. Go to `Available` and search for `aws-sqs` or `aws sqs`.
 3. Install the plugin and restart your Jenkins.
 
-If you've built the plugin from source go to `Advanced` and upload the plugin manually. Don't forget to check the plugin's Wiki page on Jenkins-CI.org: https://wiki.jenkins-ci.org/display/JENKINS/SCM+SQS+Plugin.
+If you've built the plugin from source go to `Advanced` and upload the plugin manually. Don't forget to check the plugin's Wiki page on Jenkins-CI.org: https://wiki.jenkins-ci.org/display/JENKINS/AWS+SQS+Plugin.
 
 After you've successfully installed the plugin you should see a new entry in your global Jenkins configuration. Go to `Jenkins > Manage Jenkins > Configure System` to verify. You should be able to find an entry similar to the one below.
 
@@ -76,7 +76,7 @@ Before you start to configure the plugin you should have at least one Git reposi
 
 3. Enter a name and description for the repository
 
-At the very least you'll need to enter a new name for the repository. For this plugin we would use something like *scm-sqs-plugin*. To be able to work with repositories your user account also needs permission to access CodeCommit:
+At the very least you'll need to enter a new name for the repository. For this plugin we would use something like *aws-sqs-plugin*. To be able to work with repositories your user account also needs permission to access CodeCommit:
 
 1. Go to `Services > Security & Identity > IAM`
 
@@ -88,7 +88,7 @@ At the very least you'll need to enter a new name for the repository. For this p
 
 5. Find the developer policy for your Git repository
 
-When you create a repository AWS will automatically create a policy for it. In the example above the policy would be named *scm-sqs-plugin-developer*. Alternatively you could assign the policy *AmazonSQSFullAccess* which will automatically give your user access to all repositories on CodeCommit.
+When you create a repository AWS will automatically create a policy for it. In the example above the policy would be named *aws-sqs-plugin-developer*. Alternatively you could assign the policy *AmazonSQSFullAccess* which will automatically give your user access to all repositories on CodeCommit.
 
 In addition to the policy your account also needs a public SSH key assigned. Access to repositories on CodeCommit is only possible via SSH.
 
@@ -98,7 +98,7 @@ In addition to the policy your account also needs a public SSH key assigned. Acc
 
 3. You will need the `SSH Key ID` to access the repository
 
-You should now be able to clone the repository and start working with it. The repository URL for our example would be *ssh://`ssh-key-id`@git-codecommit.us-east-1.amazonaws.com/v1/repos/scm_sqs_plugin*
+You should now be able to clone the repository and start working with it. The repository URL for our example would be *ssh://`ssh-key-id`@git-codecommit.us-east-1.amazonaws.com/v1/repos/aws_sqs_plugin*
 
 ###Create an SQS queue on AWS
 
@@ -108,7 +108,7 @@ You should now be able to clone the repository and start working with it. The re
 
 2. **Create** a **new queue**
 
-    At the very least you'll need to enter a new name for the queue. If you already have a repository something like **_repository-name_-queue** is a good idea. So for the *scm-sqs-plugin* repository we would use *scm-sqs-plugin-queue*.
+    At the very least you'll need to enter a new name for the queue. If you already have a repository something like **_repository-name_-queue** is a good idea. So for the *aws-sqs-plugin* repository we would use *aws-sqs-plugin-queue*.
 
     Review the remaining options and adjust them to your needs. If you do not know what these options do just leave them at their defaults.
 
@@ -140,7 +140,7 @@ You should see a success message as in the screenshot below. If you get an error
 2. Go to `Topics`
 3. **Create** a **new topic**
 
-    Enter a new *topic name* (the display name is optional in our case). If you already have a repository something like **_repository-name_-topic** is a good idea. So for the *scm-sqs-plugin* repository we would use the *scm-sqs-plugin-topic*.
+    Enter a new *topic name* (the display name is optional in our case). If you already have a repository something like **_repository-name_-topic** is a good idea. So for the *aws-sqs-plugin* repository we would use the *aws-sqs-plugin-topic*.
 
     The new topic should have an *ARN* similar to `arn:aws:sns:us-east-1:{id}:{topic-name}`.
 

@@ -14,8 +14,8 @@
 	</parent>
 
 	<groupId>io.relution.jenkins</groupId>
-	<url>https://wiki.jenkins-ci.org/display/JENKINS/SCM+SQS+Plugin</url>
-	<artifactId>scm-sqs</artifactId>
+	<url>https://wiki.jenkins-ci.org/display/JENKINS/AWS+SQS+Plugin</url>
+	<artifactId>aws-sqs</artifactId>
 	<version>1.5-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
