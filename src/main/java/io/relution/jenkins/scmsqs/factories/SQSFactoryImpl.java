@@ -24,16 +24,18 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.buffered.AmazonSQSBufferedAsyncClient;
 import com.amazonaws.services.sqs.buffered.QueueBufferConfig;
 import com.google.inject.Inject;
-
-import java.util.concurrent.ExecutorService;
-
 import io.relution.jenkins.scmsqs.interfaces.SQSFactory;
 import io.relution.jenkins.scmsqs.interfaces.SQSQueue;
 import io.relution.jenkins.scmsqs.interfaces.SQSQueueMonitor;
+import io.relution.jenkins.scmsqs.logging.Log;
 import io.relution.jenkins.scmsqs.net.RequestFactory;
 import io.relution.jenkins.scmsqs.net.SQSChannel;
 import io.relution.jenkins.scmsqs.net.SQSChannelImpl;
 import io.relution.jenkins.scmsqs.threading.SQSQueueMonitorImpl;
+
+import java.util.concurrent.ExecutorService;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 
 public class SQSFactoryImpl implements SQSFactory {
@@ -50,7 +52,9 @@ public class SQSFactoryImpl implements SQSFactory {
     @Override
     public AmazonSQS createSQS(final SQSQueue queue) {
         final ClientConfiguration clientConfiguration = this.getClientConfiguration(queue);
-        final AmazonSQS sqs = new AmazonSQSClient(queue, clientConfiguration);
+        boolean hasCredentials = isNotBlank(queue.getAWSAccessKeyId()) && isNotBlank(queue.getAWSSecretKey());
+        Log.info("Creating AmazonSQS instance - hasCredentials='%s'", hasCredentials);
+        final AmazonSQS sqs = hasCredentials ? new AmazonSQSClient(queue, clientConfiguration) : new AmazonSQSClient(clientConfiguration);
 
         if (queue.getEndpoint() != null) {
             sqs.setEndpoint(queue.getEndpoint());
@@ -62,7 +66,9 @@ public class SQSFactoryImpl implements SQSFactory {
     @Override
     public AmazonSQSAsync createSQSAsync(final SQSQueue queue) {
         final ClientConfiguration clientConfiguration = this.getClientConfiguration(queue);
-        final AmazonSQSAsyncClient sqsAsync = new AmazonSQSAsyncClient(queue, clientConfiguration, this.executor);
+        boolean hasCredentials = isNotBlank(queue.getAWSAccessKeyId()) && isNotBlank(queue.getAWSSecretKey());
+        Log.info("Creating AmazonSQS instance - hasCredentials='%s'", hasCredentials);
+        final AmazonSQSAsyncClient sqsAsync = hasCredentials ? new AmazonSQSAsyncClient(queue, clientConfiguration, this.executor) : new AmazonSQSAsyncClient(clientConfiguration);
 
         if (queue.getEndpoint() != null) {
             sqsAsync.setEndpoint(queue.getEndpoint());

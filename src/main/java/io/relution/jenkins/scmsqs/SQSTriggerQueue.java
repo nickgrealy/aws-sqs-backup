@@ -17,10 +17,20 @@
 package io.relution.jenkins.scmsqs;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.google.inject.Inject;
-
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.util.FormValidation;
+import hudson.util.Secret;
+import io.relution.jenkins.scmsqs.factories.SQSFactoryImpl;
+import io.relution.jenkins.scmsqs.i18n.sqstriggerqueue.Messages;
+import io.relution.jenkins.scmsqs.interfaces.SQSFactory;
+import io.relution.jenkins.scmsqs.interfaces.SQSQueue;
+import io.relution.jenkins.scmsqs.logging.Log;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -29,16 +39,6 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.util.FormValidation;
-import hudson.util.Secret;
-import io.relution.jenkins.scmsqs.i18n.sqstriggerqueue.Messages;
-import io.relution.jenkins.scmsqs.interfaces.SQSFactory;
-import io.relution.jenkins.scmsqs.interfaces.SQSQueue;
-import io.relution.jenkins.scmsqs.logging.Log;
 
 
 public class SQSTriggerQueue extends AbstractDescribableImpl<SQSTriggerQueue> implements SQSQueue {
@@ -118,7 +118,7 @@ public class SQSTriggerQueue extends AbstractDescribableImpl<SQSTriggerQueue> im
 
     public AmazonSQS getSQSClient() {
         if (this.sqs == null) {
-            this.sqs = this.getFactory().createSQSAsync(this);
+            this.sqs = this.getFactory().createSQS(this);
         }
         return this.sqs;
     }
@@ -206,12 +206,12 @@ public class SQSTriggerQueue extends AbstractDescribableImpl<SQSTriggerQueue> im
         if (StringUtils.isBlank(this.getName())) {
             return false;
         }
-        if (StringUtils.isEmpty(this.getAWSAccessKeyId())) {
-            return false;
-        }
-        if (StringUtils.isEmpty(this.getAWSSecretKey())) {
-            return false;
-        }
+//        if (StringUtils.isEmpty(this.getAWSAccessKeyId())) {
+//            return false;
+//        }
+//        if (StringUtils.isEmpty(this.getAWSSecretKey())) {
+//            return false;
+//        }
         return true;
     }
 
@@ -328,13 +328,13 @@ public class SQSTriggerQueue extends AbstractDescribableImpl<SQSTriggerQueue> im
                     return FormValidation.warning("Name or URL of the queue must be set.");
                 }
 
-                if (StringUtils.isEmpty(queue.getAWSAccessKeyId())) {
-                    return FormValidation.warning("AWS access key ID must be set.");
-                }
-
-                if (StringUtils.isEmpty(queue.getAWSSecretKey())) {
-                    return FormValidation.warning("AWS secret key must be set.");
-                }
+//                if (StringUtils.isEmpty(queue.getAWSAccessKeyId())) {
+//                    return FormValidation.warning("AWS access key ID must be set.");
+//                }
+//
+//                if (StringUtils.isEmpty(queue.getAWSSecretKey())) {
+//                    return FormValidation.warning("AWS secret key must be set.");
+//                }
 
                 final AmazonSQS client = queue.getSQSClient();
 
