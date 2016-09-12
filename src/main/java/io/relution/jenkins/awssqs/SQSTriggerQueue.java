@@ -25,7 +25,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import io.relution.jenkins.scmsqs.i18n.sqstriggerqueue.Messages;
+import io.relution.jenkins.awssqs.i18n.sqstriggerqueue.Messages;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -38,37 +38,37 @@ import java.util.regex.Pattern;
 
 public class SQSTriggerQueue extends AbstractDescribableImpl<SQSTriggerQueue> implements io.relution.jenkins.awssqs.interfaces.SQSQueue {
 
-    public static final Pattern  SQS_URL_PATTERN                = Pattern
+    public static final Pattern SQS_URL_PATTERN = Pattern
             .compile("^(?:http(?:s)?://)?(?<endpoint>sqs\\..+?\\.amazonaws\\.com)/(?<id>.+?)/(?<name>.*)$");
 
-    public static final Pattern  CODECOMMIT_URL_PATTERN         = Pattern
+    public static final Pattern CODECOMMIT_URL_PATTERN = Pattern
             .compile("^(?:http(?:s)?://)?git-codecommit\\.(?<region>.+?)\\.amazonaws\\.com/v1/repos/(?<name>.*)$");
 
-    private static final int     WAIT_TIME_SECONDS_DEFAULT      = 20;
-    private static final int     WAIT_TIME_SECONDS_MIN          = 1;
-    private static final int     WAIT_TIME_SECONDS_MAX          = 20;
+    private static final int WAIT_TIME_SECONDS_DEFAULT = 20;
+    private static final int WAIT_TIME_SECONDS_MIN = 1;
+    private static final int WAIT_TIME_SECONDS_MAX = 20;
 
-    private static final int     MAX_NUMBER_OF_MESSAGES_DEFAULT = 10;
-    private static final int     MAX_NUMBER_OF_MESSAGES_MIN     = 1;
-    private static final int     MAX_NUMBER_OF_MESSAGES_MAX     = 10;
+    private static final int MAX_NUMBER_OF_MESSAGES_DEFAULT = 10;
+    private static final int MAX_NUMBER_OF_MESSAGES_MIN = 1;
+    private static final int MAX_NUMBER_OF_MESSAGES_MAX = 10;
 
-    private final String         uuid;
+    private final String uuid;
 
-    private final String         nameOrUrl;
-    private final String         accessKey;
-    private final Secret         secretKey;
+    private final String nameOrUrl;
+    private final String accessKey;
+    private final Secret secretKey;
 
-    private final Integer        waitTimeSeconds;
-    private final Integer        maxNumberOfMessages;
+    private final Integer waitTimeSeconds;
+    private final Integer maxNumberOfMessages;
 
-    private String               url;
-    private final String         name;
-    private final String         endpoint;
+    private String url;
+    private final String name;
+    private final String endpoint;
 
     private transient io.relution.jenkins.awssqs.interfaces.SQSFactory factory;
-    private transient AmazonSQS  sqs;
+    private transient AmazonSQS sqs;
 
-    private transient String     s;
+    private transient String s;
 
     @DataBoundConstructor
     public SQSTriggerQueue(

@@ -34,7 +34,7 @@ import hudson.triggers.TriggerDescriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.SequentialExecutionQueue;
-import io.relution.jenkins.scmsqs.i18n.sqstrigger.Messages;
+import io.relution.jenkins.awssqs.i18n.sqstrigger.Messages;
 import io.relution.jenkins.awssqs.interfaces.EventTriggerMatcher;
 import io.relution.jenkins.awssqs.interfaces.MessageParserFactory;
 import io.relution.jenkins.awssqs.interfaces.SQSQueue;
@@ -64,14 +64,14 @@ import java.util.concurrent.Executors;
 
 public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.relution.jenkins.awssqs.interfaces.SQSQueueListener, Runnable {
 
-    private final String                       queueUuid;
+    private final String queueUuid;
 
     private transient SQSQueueMonitorScheduler scheduler;
 
-    private transient MessageParserFactory     messageParserFactory;
-    private transient EventTriggerMatcher      eventTriggerMatcher;
+    private transient MessageParserFactory messageParserFactory;
+    private transient EventTriggerMatcher eventTriggerMatcher;
 
-    private transient ExecutorService          executor;
+    private transient ExecutorService executor;
 
     @DataBoundConstructor
     public SQSTrigger(final String queueUuid) {
@@ -79,7 +79,11 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.rel
     }
 
     public File getLogFile() {
-        return new File(this.job.getRootDir(), "sqs-polling.log");
+        if (this.job == null) {
+            return null;
+        } else {
+            return new File(this.job.getRootDir(), "sqs-polling.log");
+        }
     }
 
     @Override
@@ -188,8 +192,8 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.rel
         Map<String, String> jobParams = new HashMap<>();
 
         // add job parameters from the message (N.B. won't work post Jenkins v2+) @see https://wiki.jenkins-ci.org/display/JENKINS/Plugins+affected+by+fix+for+SECURITY-170
-        for (Map.Entry<String, String> att : message.getAttributes().entrySet()){
-            if (StringUtils.isNotBlank(att.getKey())){
+        for (Map.Entry<String, String> att : message.getAttributes().entrySet()) {
+            if (StringUtils.isNotBlank(att.getKey())) {
                 jobParams.put("sqs_" + att.getKey(), att.getValue());
             }
         }
@@ -211,10 +215,10 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.rel
 //        }
     }
 
-    private void startJob(Map<String, String> jobParameters){
+    private void startJob(Map<String, String> jobParameters) {
         // initialise parameters...
         List<StringParameterValue> params = new ArrayList<>();
-        for (Map.Entry<String, String> param : jobParameters.entrySet()){
+        for (Map.Entry<String, String> param : jobParameters.entrySet()) {
             params.add(new StringParameterValue(param.getKey(), param.getValue()));
         }
 
@@ -223,17 +227,21 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.rel
 
         // attempt to build cause from descriptor...
         TriggerDescriptor descriptor = this.getDescriptor();
-        if (descriptor instanceof DescriptorImpl){
+        if (descriptor instanceof DescriptorImpl) {
             DescriptorImpl impl = (DescriptorImpl) descriptor;
             List<io.relution.jenkins.awssqs.SQSTriggerQueue> queues = impl.getSqsQueues();
-            if (!queues.isEmpty()){
+            if (!queues.isEmpty()) {
                 cause = new Cause.RemoteCause(queues.get(0).getUrl(), "Job triggered by AWS SQS Message");
             }
         }
 
         StringParameterValue[] parameters = params.toArray(new StringParameterValue[params.size()]);
         Log.info("Triggering job with %s parameters...", parameters.length);
-        job.scheduleBuild(0, cause, new ParametersAction(parameters));
+        if (job == null) {
+            Log.severe("Unexpected error, 'job' object was null!");
+        } else {
+            job.scheduleBuild(0, cause, new ParametersAction(parameters));
+        }
         Log.info("Triggering job [COMPLETED]");
     }
 
@@ -281,13 +289,13 @@ public class SQSTrigger extends Trigger<AbstractProject<?, ?>> implements io.rel
     @Extension
     public static final class DescriptorImpl extends TriggerDescriptor {
 
-        private static final String                             KEY_SQS_QUEUES = "sqsQueues";
-        private volatile List<io.relution.jenkins.awssqs.SQSTriggerQueue>                  sqsQueues;
+        private static final String KEY_SQS_QUEUES = "sqsQueues";
+        private volatile List<io.relution.jenkins.awssqs.SQSTriggerQueue> sqsQueues;
 
         private volatile transient Map<String, io.relution.jenkins.awssqs.SQSTriggerQueue> sqsQueueMap;
-        private transient boolean                               isLoaded;
+        private transient boolean isLoaded;
 
-        private transient final SequentialExecutionQueue        queue          = new SequentialExecutionQueue(Executors.newSingleThreadExecutor());
+        private transient final SequentialExecutionQueue queue = new SequentialExecutionQueue(Executors.newSingleThreadExecutor());
 
         public static DescriptorImpl get() {
             final DescriptorExtensionList<Trigger<?>, TriggerDescriptor> triggers = Trigger.all();
